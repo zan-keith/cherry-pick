@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+code {
+  @apply font-mono text-sm;
+  background-color: theme('colors.gray.100');
+  padding: 0.5rem 1rem;
+  margin: 1rem 0;
+}
