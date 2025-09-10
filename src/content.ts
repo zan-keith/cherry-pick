@@ -1,3 +1,8 @@
+import { Storage } from "@plasmohq/storage"
+import { useStorage } from "@plasmohq/storage/hook"
+
+
+
 let lastHovered: HTMLElement | null = null;
 let selectionAllowed = false;
 let sendSelectionCallback: ((element: HTMLElement) => void) | null = null;
@@ -7,6 +12,7 @@ function handleClick(e: MouseEvent) {
     const target = e.target as HTMLElement;
     if (target instanceof HTMLElement && lastHovered === target) {
         console.log('Clicked element:', target);
+        setSelectedElements(target.outerHTML);
         if (sendSelectionCallback) {
             sendSelectionCallback(target);
             sendSelectionCallback = null;
@@ -59,7 +65,14 @@ function removeListeners() {
     document.body.removeEventListener('click', handleClick, true);
 }
 
+async function setSelectedElements(element) {
+    const storage = new Storage();
+    let prevElements = await storage.get("selectedElements") || [];
+    storage.set("selectedElements", [...prevElements, element]);
+    console.log("Element saved to storage:", element);
+}
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    
     if (message.type === "ALLOW_SELECTION") {
         selectionAllowed = true;
         sendSelectionCallback = (element: HTMLElement) => {

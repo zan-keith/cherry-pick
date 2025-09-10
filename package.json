@@ -10,6 +10,7 @@
     "package": "plasmo package"
   },
   "dependencies": {
+    "@plasmohq/storage": "^1.15.0",
     "@tailwindcss/postcss": "^4.1.13",
     "plasmo": "0.90.5",
     "react": "18.2.0",
