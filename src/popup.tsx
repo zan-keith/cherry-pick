@@ -6,16 +6,72 @@ function IndexPopup() {
 
   const [selectedElements, setSelectedElements] = useState([])
   const [data, setData] = useStorage("selectedElements")
+  const [commonIdentifiers, setCommonIdentifiers] = useState({ tags: [], classes: [], ids: [] })
   React.useEffect(() => {
     if (data) {
       setSelectedElements(data)
+
+      getCommonIdentifiers(data)
+
+
     }
   }, [data])
 
+  function getCommonIdentifiers(elements) {
+    if (elements.length === 0) return { tags: [], classes: [], ids: [], attributes: {} }
+    const tagCount = {}
+    const classCount = {}
+    const idCount = {}
+    const attributeCount = {}
+
+    elements.forEach((htmlString) => {
+      const doc = new DOMParser().parseFromString(htmlString, "text/html")
+      const element = doc.body.firstChild as HTMLElement
+      if (!element) return
+
+      // Tag name
+      const tagName = element.tagName.toLowerCase()
+      tagCount[tagName] = (tagCount[tagName] || 0) + 1
+
+      // Classes
+      element.classList.forEach((cls) => {
+        classCount[cls] = (classCount[cls] || 0) + 1
+      })
+
+      // IDs
+      if (element.id) {
+        idCount[element.id] = (idCount[element.id] || 0) + 1
+      }
+
+      // Other attributes
+      Array.from(element.attributes).forEach(attr => {
+        const key = `${attr.name}=${attr.value}`
+        attributeCount[key] = (attributeCount[key] || 0) + 1
+      })
+    })
+
+    const total = elements.length
+    const commonTags = Object.keys(tagCount).filter(tag => tagCount[tag] === total)
+    const commonClasses = Object.keys(classCount).filter(cls => classCount[cls] === total)
+    const commonIds = Object.keys(idCount).filter(id => idCount[id] === total)
+
+    // Find common attributes and their values
+    const commonAttributes = {}
+    Object.keys(attributeCount).forEach(key => {
+      if (attributeCount[key] === total) {
+        const [name, value] = key.split("=")
+        commonAttributes[name] = value
+      }
+    })
+
+    setCommonIdentifiers({ tags: commonTags, classes: commonClasses, ids: commonIds, attributes: commonAttributes })
+    return { tags: commonTags, classes: commonClasses, ids: commonIds, attributes: commonAttributes }
+  }
   async function handleClearAll() {
     console.log("Clearing all selected elements")
     setData([])
     setSelectedElements([])
+    setCommonIdentifiers({ tags: [], classes: [], ids: [] })
     // storage.set("selectedElements", []);
     // setSelectedElements([])
   }
@@ -63,7 +119,6 @@ function IndexPopup() {
               <div key={index} className="text-left bg-gray-100">
                 <pre className="text-left break-all whitespace-pre-wrap">
                   {innerText(el)}
-
                 </pre>
               </div>
             ))}
@@ -73,11 +128,34 @@ function IndexPopup() {
       
         <div className="w-full mt-2">
           <h3 className="font-semibold">
-            Common Identifiers found:
+            Common Identifiers found: ({commonIdentifiers.tags.length + commonIdentifiers.classes.length + commonIdentifiers.ids.length})
           </h3>
+          <div className="text-sm">
+            {commonIdentifiers.tags.length > 0 && (
+              <p><span className="font-semibold">Tags:</span> {commonIdentifiers.tags.join(", ")}</p>
+            )}
+            {commonIdentifiers.classes.length > 0 && (
+              <div className="flex gap-1 items-center"><p className="font-semibold">Classes:</p>
+              {commonIdentifiers.classes.map((cls, idx) => (
+                <p key={idx} className="bg-gray-200 px-2 py-1 rounded text-xs">{cls}</p>
+              ))}
+              </div>
+            )}
+            {Object.keys(commonIdentifiers.attributes || {}).length > 0 && (
+              <div>
+                <span className="font-semibold">Attributes:</span>
+                {Object.entries(commonIdentifiers.attributes).map(([name, value], idx) => (
+                  <p key={idx} className="bg-gray-200 px-2 py-1 rounded text-xs">{name}="{value}"</p>
+                ))}
+              </div>
+            )}
 
-        </div>
-
+            {/* Dont really need ids since they shouldnt be duplicated but, whatever*/}
+            {commonIdentifiers.ids.length > 0 && (
+              <p><span className="font-semibold">IDs:</span>{commonIdentifiers.ids.join(", ")}</p>
+            )}
+          </div>
+</div>
     </div>
   )
 }
