@@ -66,7 +66,9 @@ function removeListeners() {
 }
 
 async function setSelectedElements(element) {
-    const storage = new Storage();
+    const storage = new Storage({
+  area: "local"
+})
     let prevElements = await storage.get("selectedElements") || [];
     storage.set("selectedElements", [...prevElements, element]);
     console.log("Element saved to storage:", element);
