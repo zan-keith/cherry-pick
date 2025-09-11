@@ -2,6 +2,8 @@
 
 > A Chrome extension for quick scraping of common elements from web pages.
 
+> This is just part of a hobby project of mine. I found this made my life easier and hopefully this will help someone else.
+
 ### Features
 - **Automatic Identifier Detection:** Finds common classes, attributes, or tags among selected elements.
 - **JavaScript Snippet Generation:** Creates a JS snippet to select and scrape the elements.
