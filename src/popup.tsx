@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import "./style.css"
-import { ChartNoAxesGantt, ChevronDown, ChevronDownSquare, ChevronUp, ChevronUpSquare, ClipboardList, CodeXml } from "lucide-react"
+import { BadgeQuestionMark, ChartNoAxesGantt, ChevronDown, ChevronDownSquare, ChevronUp, ChevronUpSquare, ClipboardList, CodeXml } from "lucide-react"
 
 function IndexPopup() {
 
@@ -205,16 +205,26 @@ function removeSelectedElement(index) {
   
   return (
     <div className="p-2 min-w-[380px]">
-      <h1 className="text-lg font-semibold mb-4 text-center uppercase">
-        Cherrypick Extension
+      <div className="border-l-4 pl-2 mb-2 flex justify-between">
+<div>
+
+      <h1 className="text-lg font-bold  text-left w-full tracking-wider ">
+        Cherrypick <span className="text-red-500">.</span>
       </h1>
+      <p className="text-xs text-gray-500">Select elements to cherry pick</p>
+</div>
+<a href="https://github.com/zan-keith/cherry-pick" target="_blank" className="font-semibold flex gap-1 px-2 items-center border p-1 rounded-lg bg-gray-200 cursor-pointer">
+  How To
+  <BadgeQuestionMark />
+</a>
+      </div>
       <div className="flex items-center flex-col w-full border rounded p-2">
 <div className=" flex justify-between w-full gap-2">
 
       <button onClick={handleClick} className="bg-yellow-400 text-black px-4  rounded-lg w-full h-10 font-semibold" >
-        Select Element
+        Scrape Elements
       </button>
-      <button>
+      <button className="cursor-pointer">
         {selectElementView
           ? <ChevronUp   onClick={() => setSelectElementView(false)}/>
           : <ChevronDown  onClick={() => setSelectElementView(true)}/>
@@ -289,9 +299,12 @@ function removeSelectedElement(index) {
   className="bg-blue-500 text-white font-semibold px-4  rounded-lg w-full h-10">
   Select Samples
 </button>
+      <button className="cursor-pointer">
+
 {
   sampleSelectionView ? <ChevronUp onClick={() => setSampleSelectionView(false)}/> : <ChevronDown onClick={() => setSampleSelectionView(true)}/>
 }
+      </button>
 </div>
 {sampleSelectionView && (
 <div className="w-full mt-2">
