@@ -80,6 +80,17 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         };
         addListeners();
         return true; // Keep sendResponse alive for async
+    }    
+    else if (message.type === "CLEAR_ALL_HIGHLIGHTS") {
+        console.log("Clearing all highlights");
+        document.querySelectorAll('*').forEach(el => {
+            if (el instanceof HTMLElement) {
+                el.style.outline = '';
+                el.style.backgroundColor = '';
+            }
+        });
+        sendResponse({ status: "highlights_cleared" });
+        return true; // Keep sendResponse alive for async
     }
     else if (message.type === "SELECT_ELEMENTS") {
         console.log("Selecting elements with selector:", message.selector);
@@ -98,5 +109,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ status: "elements_selected", elements: elementsArray });
         return true; // Keep sendResponse alive for async
     }
+
+
     return false;
 });

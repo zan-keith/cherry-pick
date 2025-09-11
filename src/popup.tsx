@@ -2,23 +2,26 @@ import React, { useCallback, useState } from "react"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import "./style.css"
+import { ChevronDown, ChevronDownSquare, ChevronUp, ChevronUpSquare } from "lucide-react"
+
 function IndexPopup() {
 
-  const [selectedElements, setSelectedElements] = useState([])
-  const [sampleSelectionResult, setSampleSelectionResult] = useState([])
   const [liveSelectionStorageData, setLiveSelectionStorageData] = useStorage("selectedElements")
+  const [sampleSelectionResult, setSampleSelectionResult] = useStorage("sampleSelectionResult")
 
   const [selectElementView, setSelectElementView] = useState(true)
   const [sampleSelectionView, setSampleSelectionView] = useState(false)
   const [commonIdentifiers, setCommonIdentifiers] = useState({ tags: [], classes: [], ids: [], attributes: {} })
+
   React.useEffect(() => {
-    if (liveSelectionStorageData) {
-      setSelectedElements(liveSelectionStorageData)
+    if(sampleSelectionResult && sampleSelectionResult.length > 0) {
+      setSampleSelectionView(true)
+      setSelectElementView(false)
     }
-  }, [liveSelectionStorageData])
+  },[sampleSelectionResult])
   React.useEffect(() => {
-    getCommonIdentifiers(selectedElements)
-  }, [selectedElements])
+    getCommonIdentifiers(liveSelectionStorageData || [])
+  }, [liveSelectionStorageData])
 
   function getCommonIdentifiers(elements) {
     if (elements.length === 0) return { tags: [], classes: [], ids: [], attributes: {} }
@@ -67,21 +70,36 @@ function IndexPopup() {
       }
     })
 
-    setCommonIdentifiers({ tags: commonTags, classes: commonClasses, ids: commonIds, attributes: commonAttributes })
-    return { tags: commonTags, classes: commonClasses, ids: commonIds, attributes: commonAttributes }
+  setCommonIdentifiers({ tags: commonTags, classes: commonClasses, ids: commonIds, attributes: commonAttributes })
+  return { tags: commonTags, classes: commonClasses, ids: commonIds, attributes: commonAttributes }
   }
+  const clearSamples = useCallback(() => {
+    console.log("Clearing sample selection results")
+    setSampleSelectionResult([])
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(
+          tabs[0].id,
+          { type: "CLEAR_ALL_HIGHLIGHTS" },
+          (response) => {
+            console.log("Response from content script:", response)
+          }
+        )
+      }
+    })
+
+  }, [])
   async function handleClearAll() {
-    console.log("Clearing all selected elements")
-    setLiveSelectionStorageData([])
-    setSelectedElements([])
+  console.log("Clearing all selected elements")
+  setLiveSelectionStorageData([])
   setCommonIdentifiers({ tags: [], classes: [], ids: [], attributes: {} })
     // storage.set("selectedElements", []);
     // setSelectedElements([])
   }
 
   const selectCommonElements = useCallback(() => {
-    if (selectedElements.length === 0) return
-    const identifiers = getCommonIdentifiers(selectedElements)
+  if (!liveSelectionStorageData || liveSelectionStorageData.length === 0) return
+  const identifiers = getCommonIdentifiers(liveSelectionStorageData)
     console.log("Selecting common elements with identifiers:", identifiers)
     let selector = ""
     if (identifiers.tags.length > 0) {
@@ -122,7 +140,7 @@ function IndexPopup() {
         )
       }
     })
-  }, [selectedElements])
+  }, [liveSelectionStorageData])
     
   
 
@@ -140,38 +158,55 @@ function IndexPopup() {
       }
     })
   }, [])
-
+function removeSelectedElement(index) {
+    const updatedElements = [...(liveSelectionStorageData || [])]
+    updatedElements.splice(index, 1)
+    setLiveSelectionStorageData(updatedElements)
+    getCommonIdentifiers(updatedElements)
+  }
   function innerText(htmlString) {
     const doc = new DOMParser().parseFromString(htmlString, "text/html")
     return doc.body.innerText
   }
 
   return (
-    <div className="p-5 min-w-[300px]">
+    <div className="p-2 min-w-[380px]">
       <h1 className="text-lg font-semibold mb-4 text-center uppercase">
         Cherrypick Extension
       </h1>
-      <button onClick={handleClick} className="bg-yellow-400 text-black px-4 py-2 rounded mb-4 w-full" >
+      <div className="flex items-center flex-col w-full border rounded p-2">
+<div className=" flex justify-between w-full gap-2">
+
+      <button onClick={handleClick} className="bg-yellow-400 text-black px-4  rounded-lg w-full h-10 font-semibold" >
         Select Element
       </button>
+      <button>
+        {selectElementView
+          ? <ChevronUp   onClick={() => setSelectElementView(false)}/>
+          : <ChevronDown  onClick={() => setSelectElementView(true)}/>
+        }
+      </button>
+      </div>
 
-      <div className="p-2 border rounded">
-        <div className="flex justify-between items-center ">
+      {selectElementView && (
+        <div className="w-full mt-2">
+      <div className="p-2 border rounded w-full">
+        <div className="flex justify-between items-center w-full">
 
-          <h2 className="font-semibold ">Selected Elements: ({selectedElements.length})</h2>
+      <h2 className="font-semibold ">Selected Elements: ({(liveSelectionStorageData || []).length})</h2>
           <button onClick={handleClearAll} className=" bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">Clear All</button>
         </div>
         <hr className="my-1"/>
-        {selectedElements.length === 0 ? (
+        {(liveSelectionStorageData || []).length === 0 ? (
           <p className="text-gray-500">No elements selected yet.</p>
         ) : (
           <div className=" max-h-40 overflow-y-auto gap-1 flex flex-col">
-            {selectedElements.map((el, index) => (
-              <div key={index} className="text-left bg-gray-100">
+            {(liveSelectionStorageData || []).map((el, index) => (
+              <button key={index} className="text-left bg-gray-100 hover:bg-red-200 cursor-pointer" onClick={() => removeSelectedElement(index)}>
                 <pre className="text-left break-all whitespace-pre-wrap">
                   {innerText(el)}
                 </pre>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -206,17 +241,32 @@ function IndexPopup() {
               <p><span className="font-semibold">IDs:</span>{commonIdentifiers.ids.join(", ")}</p>
             )}
           </div>
+          
 </div>
+</div>
+      )}
+</div>
+<div className="p-2 border rounded mt-2">
+
+<div className="flex w-full justify-between items-center  gap-2">
+
 <button
   onClick={selectCommonElements}
-className="mt-4 bg-blue-500 text-white px-4 py-2 rounded w-full">
-        Sample Select
+  className="bg-blue-500 text-white font-semibold px-4  rounded-lg w-full h-10">
+  Select Samples
 </button>
+{
+  sampleSelectionView ? <ChevronUp onClick={() => setSampleSelectionView(false)}/> : <ChevronDown onClick={() => setSampleSelectionView(true)}/>
+}
+</div>
+{sampleSelectionView && (
+<div className="w-full mt-2">
+
    <div className="p-2 border rounded">
         <div className="flex justify-between items-center ">
 
           <h2 className="font-semibold ">Found Elements: ({sampleSelectionResult.length})</h2>
-          <button onClick={handleClearAll} className=" bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">Clear All</button>
+          <button onClick={clearSamples} className=" bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">Clear All</button>
         </div>
         <hr className="my-1"/>
         {sampleSelectionResult.length === 0 ? (
@@ -233,6 +283,10 @@ className="mt-4 bg-blue-500 text-white px-4 py-2 rounded w-full">
           </div>
         )}
       </div>
+      </div>
+      )}
+      
+</div>
 
     </div>
   )
