@@ -14,6 +14,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.1.13
         version: 4.1.13
+      hook:
+        specifier: link:@plasmohq/storage/hook
+        version: link:@plasmohq/storage/hook
       lucide-react:
         specifier: ^0.543.0
         version: 0.543.0(react@18.2.0)

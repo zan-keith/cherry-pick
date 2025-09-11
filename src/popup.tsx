@@ -2,12 +2,18 @@ import React, { useCallback, useState } from "react"
 import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import "./style.css"
-import { ChevronDown, ChevronDownSquare, ChevronUp, ChevronUpSquare } from "lucide-react"
+import { ChartNoAxesGantt, ChevronDown, ChevronDownSquare, ChevronUp, ChevronUpSquare, ClipboardList, CodeXml } from "lucide-react"
 
 function IndexPopup() {
 
-  const [liveSelectionStorageData, setLiveSelectionStorageData] = useStorage("selectedElements")
-  const [sampleSelectionResult, setSampleSelectionResult] = useStorage("sampleSelectionResult")
+  const [liveSelectionStorageData, setLiveSelectionStorageData] = useStorage({key: "selectedElements",instance: new Storage({
+    area: "local"
+  })
+})
+  const [sampleSelectionResult, setSampleSelectionResult] = useStorage({key: "sampleSelectionResult",instance: new Storage({
+    area: "local"
+  })
+})
 
   const [selectElementView, setSelectElementView] = useState(true)
   const [sampleSelectionView, setSampleSelectionView] = useState(false)
@@ -73,6 +79,7 @@ function IndexPopup() {
   setCommonIdentifiers({ tags: commonTags, classes: commonClasses, ids: commonIds, attributes: commonAttributes })
   return { tags: commonTags, classes: commonClasses, ids: commonIds, attributes: commonAttributes }
   }
+
   const clearSamples = useCallback(() => {
     console.log("Clearing sample selection results")
     setSampleSelectionResult([])
@@ -89,6 +96,8 @@ function IndexPopup() {
     })
 
   }, [])
+
+
   async function handleClearAll() {
   console.log("Clearing all selected elements")
   setLiveSelectionStorageData([])
@@ -97,11 +106,8 @@ function IndexPopup() {
     // setSelectedElements([])
   }
 
-  const selectCommonElements = useCallback(() => {
-  if (!liveSelectionStorageData || liveSelectionStorageData.length === 0) return
-  const identifiers = getCommonIdentifiers(liveSelectionStorageData)
-    console.log("Selecting common elements with identifiers:", identifiers)
-    let selector = ""
+  function generateSelector(identifiers) {
+        let selector = ""
     if (identifiers.tags.length > 0) {
       selector += identifiers.tags[0]
     } else {
@@ -123,6 +129,15 @@ function IndexPopup() {
       }
     })
     console.log("Constructed selector:", selector)
+    return selector
+  }
+
+
+  const selectCommonElements = useCallback(() => {
+  if (!liveSelectionStorageData || liveSelectionStorageData.length === 0) return
+  const identifiers = getCommonIdentifiers(liveSelectionStorageData)
+    console.log("Selecting common elements with identifiers:", identifiers)
+    let selector = generateSelector(identifiers)
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
@@ -132,6 +147,7 @@ function IndexPopup() {
           (response) => {
             console.log("Response from content script:", response)
             if (response && response.elements) {
+              console.log("Elements received:", response.elements)
               setSampleSelectionResult(response.elements)
             } else {
               setSampleSelectionResult([])
@@ -169,6 +185,24 @@ function removeSelectedElement(index) {
     return doc.body.innerText
   }
 
+
+  function copyToClipboard(txt) {
+    if (!txt) return
+    navigator.clipboard.writeText(txt).then(() => {
+      console.log("Data copied to clipboard")
+    }).catch((err) => {
+      console.error("Could not copy text: ", err)
+    })
+  }
+  function generateJS() {
+    if (!liveSelectionStorageData || liveSelectionStorageData.length === 0) return
+    const identifiers = getCommonIdentifiers(liveSelectionStorageData)
+    let selector = generateSelector(identifiers)
+    if (!selector || selector === "") selector = "*"
+    const jsCode = `document.querySelectorAll("${selector}")`
+    return jsCode
+  }
+  
   return (
     <div className="p-2 min-w-[380px]">
       <h1 className="text-lg font-semibold mb-4 text-center uppercase">
@@ -285,7 +319,26 @@ function removeSelectedElement(index) {
       </div>
       </div>
       )}
-      
+<div className="flex w-full gap-2 justify-end mt-2">
+  <button
+    onClick={() => copyToClipboard(sampleSelectionResult.map(innerText).join("\n"))}
+    className="text-gray-500 cursor-pointer border p-1 rounded bg-gray-100 hover:bg-gray-200 flex gap-1 items-center"
+  >
+    <ClipboardList size={24} className="" />
+    Copy Data
+  </button>
+    {/* <button className="text-gray-500 cursor-pointer border p-1 rounded bg-gray-100 hover:bg-gray-200 flex gap-1 items-center">
+
+    <ChartNoAxesGantt  size={24} className=""/>
+    Copy Object
+  </button> */}
+      <button onClick={() => copyToClipboard(generateJS())} className="text-gray-500 cursor-pointer border p-1 rounded bg-gray-100 hover:bg-gray-200 flex gap-1 items-center">
+
+    <CodeXml  size={24} className=""/>
+    JS 
+  </button>
+    {/* <CodeXml  size={32} className="text-gray-500 cursor-pointer border p-1 rounded bg-gray-100 hover:bg-gray-200"/> */}
+</div>
 </div>
 
     </div>

@@ -12,6 +12,7 @@
   "dependencies": {
     "@plasmohq/storage": "^1.15.0",
     "@tailwindcss/postcss": "^4.1.13",
+    "hook": "link:@plasmohq/storage/hook",
     "lucide-react": "^0.543.0",
     "plasmo": "0.90.5",
     "react": "18.2.0",
