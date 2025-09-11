@@ -5,17 +5,20 @@ import "./style.css"
 function IndexPopup() {
 
   const [selectedElements, setSelectedElements] = useState([])
-  const [data, setData] = useStorage("selectedElements")
-  const [commonIdentifiers, setCommonIdentifiers] = useState({ tags: [], classes: [], ids: [] })
+  const [sampleSelectionResult, setSampleSelectionResult] = useState([])
+  const [liveSelectionStorageData, setLiveSelectionStorageData] = useStorage("selectedElements")
+
+  const [selectElementView, setSelectElementView] = useState(true)
+  const [sampleSelectionView, setSampleSelectionView] = useState(false)
+  const [commonIdentifiers, setCommonIdentifiers] = useState({ tags: [], classes: [], ids: [], attributes: {} })
   React.useEffect(() => {
-    if (data) {
-      setSelectedElements(data)
-
-      getCommonIdentifiers(data)
-
-
+    if (liveSelectionStorageData) {
+      setSelectedElements(liveSelectionStorageData)
     }
-  }, [data])
+  }, [liveSelectionStorageData])
+  React.useEffect(() => {
+    getCommonIdentifiers(selectedElements)
+  }, [selectedElements])
 
   function getCommonIdentifiers(elements) {
     if (elements.length === 0) return { tags: [], classes: [], ids: [], attributes: {} }
@@ -69,12 +72,60 @@ function IndexPopup() {
   }
   async function handleClearAll() {
     console.log("Clearing all selected elements")
-    setData([])
+    setLiveSelectionStorageData([])
     setSelectedElements([])
-    setCommonIdentifiers({ tags: [], classes: [], ids: [] })
+  setCommonIdentifiers({ tags: [], classes: [], ids: [], attributes: {} })
     // storage.set("selectedElements", []);
     // setSelectedElements([])
   }
+
+  const selectCommonElements = useCallback(() => {
+    if (selectedElements.length === 0) return
+    const identifiers = getCommonIdentifiers(selectedElements)
+    console.log("Selecting common elements with identifiers:", identifiers)
+    let selector = ""
+    if (identifiers.tags.length > 0) {
+      selector += identifiers.tags[0]
+    } else {
+      selector += "*"
+    }
+    if (identifiers.classes.length > 0) {
+      selector += identifiers.classes.map(cls => `.${cls.replace(/:/g, "\\:")}`).join("")
+    }
+    if (identifiers.ids.length > 0) {
+      selector += identifiers.ids.map(id => `#${id}`).join("")
+    }
+    Object.entries(identifiers.attributes || {}).forEach(([name, value]) => {
+      // Only include attributes that are valid for selectors (skip style)
+      if (name !== "style") {
+        // Check for valid CSS attribute value (no semicolons, colons, etc.)
+        if (/^[^:;]+$/.test(String(value))) {
+          selector += `[${name}="${value}"]`
+        }
+      }
+    })
+    console.log("Constructed selector:", selector)
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(
+          tabs[0].id,
+          { type: "SELECT_ELEMENTS", selector },
+          (response) => {
+            console.log("Response from content script:", response)
+            if (response && response.elements) {
+              setSampleSelectionResult(response.elements)
+            } else {
+              setSampleSelectionResult([])
+            }
+          }
+        )
+      }
+    })
+  }, [selectedElements])
+    
+  
+
   const handleClick = useCallback(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
@@ -141,11 +192,11 @@ function IndexPopup() {
               ))}
               </div>
             )}
-            {Object.keys(commonIdentifiers.attributes || {}).length > 0 && (
+            {commonIdentifiers.attributes && Object.keys(commonIdentifiers.attributes).length > 0 && (
               <div>
                 <span className="font-semibold">Attributes:</span>
                 {Object.entries(commonIdentifiers.attributes).map(([name, value], idx) => (
-                  <p key={idx} className="bg-gray-200 px-2 py-1 rounded text-xs">{name}="{value}"</p>
+                  <p key={idx} className="bg-gray-200 px-2 py-1 rounded text-xs">{name}="{String(value)}"</p>
                 ))}
               </div>
             )}
@@ -156,6 +207,33 @@ function IndexPopup() {
             )}
           </div>
 </div>
+<button
+  onClick={selectCommonElements}
+className="mt-4 bg-blue-500 text-white px-4 py-2 rounded w-full">
+        Sample Select
+</button>
+   <div className="p-2 border rounded">
+        <div className="flex justify-between items-center ">
+
+          <h2 className="font-semibold ">Found Elements: ({sampleSelectionResult.length})</h2>
+          <button onClick={handleClearAll} className=" bg-red-500 text-white px-2 py-1 rounded text-xs font-semibold">Clear All</button>
+        </div>
+        <hr className="my-1"/>
+        {sampleSelectionResult.length === 0 ? (
+          <p className="text-gray-500">No elements selected yet.</p>
+        ) : (
+          <div className=" max-h-40 overflow-y-auto gap-1 flex flex-col">
+            {sampleSelectionResult.map((el, index) => (
+              <div key={index} className="text-left bg-gray-100">
+                <pre className="text-left break-all whitespace-pre-wrap">
+                  {innerText(el)}
+                </pre>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }

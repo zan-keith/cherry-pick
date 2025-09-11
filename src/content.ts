@@ -81,5 +81,22 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         addListeners();
         return true; // Keep sendResponse alive for async
     }
+    else if (message.type === "SELECT_ELEMENTS") {
+        console.log("Selecting elements with selector:", message.selector);
+        const selector = message.selector;
+        const elements = document.querySelectorAll(selector);
+        const elementsArray = Array.from(elements).map(el => el.outerHTML);
+        console.log(`Elements matching selector "${selector}":`, elementsArray);
+
+        // Highlight the selected elements
+        elements.forEach(el => {
+            if (el instanceof HTMLElement) {
+                el.style.outline = '2px solid #00ff00';
+                el.style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
+            }
+        });
+        sendResponse({ status: "elements_selected", elements: elementsArray });
+        return true; // Keep sendResponse alive for async
+    }
     return false;
 });
