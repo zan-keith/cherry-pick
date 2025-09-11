@@ -3,7 +3,7 @@ import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 import "./style.css"
 import { BadgeQuestionMark, ChartNoAxesGantt, ChevronDown, ChevronDownSquare, ChevronUp, ChevronUpSquare, ClipboardList, CodeXml } from "lucide-react"
-
+import icon from "../assets/icon.png"
 function IndexPopup() {
 
   const [liveSelectionStorageData, setLiveSelectionStorageData] = useStorage({key: "selectedElements",instance: new Storage({
@@ -204,14 +204,18 @@ function removeSelectedElement(index) {
   }
   
   return (
-    <div className="p-2 min-w-[380px]">
+    <div className="p-2 min-w-[400px]">
       <div className="border-l-4 pl-2 mb-2 flex justify-between">
+
+<div className="flex gap-2 items-center">
+  <img src={icon} className="w-10 h-10" alt="" />
 <div>
 
       <h1 className="text-lg font-bold  text-left w-full tracking-wider ">
         Cherrypick <span className="text-red-500">.</span>
       </h1>
       <p className="text-xs text-gray-500">Select elements to cherry pick</p>
+</div>
 </div>
 <a href="https://github.com/zan-keith/cherry-pick" target="_blank" className="font-semibold flex gap-1 px-2 items-center border p-1 rounded-lg bg-gray-200 cursor-pointer">
   How To

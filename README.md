@@ -30,6 +30,12 @@ Scrape all product names, prices, or links from a listing page by simply selecti
 3. Run `pnpm dev` to build the extension.
 4. Load the `build/chrome-mv3-dev` folder as an unpacked extension in Chrome.
 
+### Build Instruction
+- `plasmo build --zip`
+- `plasmo build --target=firefox-mv2 --zip`
+
+
+
 ###### Development
 - Built with [Plasmo](https://docs.plasmo.com/) and [React](https://react.dev/).
 - Uses [Tailwind CSS](https://tailwindcss.com/) for styling.
