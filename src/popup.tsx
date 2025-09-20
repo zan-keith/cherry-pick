@@ -226,7 +226,7 @@ function removeSelectedElement(index) {
 <div className=" flex justify-between w-full gap-2">
 
       <button onClick={handleClick} className="bg-yellow-400 text-black px-4  rounded-lg w-full h-10 font-semibold" >
-        Scrape Elements
+        HandPick Elements
       </button>
       <button className="cursor-pointer">
         {selectElementView
@@ -301,7 +301,7 @@ function removeSelectedElement(index) {
 <button
   onClick={selectCommonElements}
   className="bg-blue-500 text-white font-semibold px-4  rounded-lg w-full h-10">
-  Select Samples
+  Scrape Elements
 </button>
       <button className="cursor-pointer">
 
