@@ -10,8 +10,9 @@
 - **One-Click Scraping:** Press the "Scrape" button to copy the data from all matched elements.
 ---
 ### Chrome Installation
-1. [Download the ZIP file from the Releases section](https://github.com/zan-keith/cherry-pick/releases). 
-2. Drag and drop the ZIP file onto the Chrome Extensions page (`chrome://extensions`) to install the extension.
+1. [Download the ZIP file from the Releases section](https://github.com/zan-keith/cherry-pick/releases).
+2. Goto `chrome://extensions/` and Enable "Developer Mode" on top right corner
+3. Drag and drop the ZIP file onto the Chrome Extensions page (`chrome://extensions`) to install the extension.
 
 ### How It Works
 1. **Activate the Extension:** Click the Cherry-Pick icon in your browser.
