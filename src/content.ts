@@ -6,15 +6,18 @@ import { useStorage } from "@plasmohq/storage/hook"
 let lastHovered: HTMLElement | null = null;
 let selectionAllowed = false;
 let sendSelectionCallback: ((element: HTMLElement) => void) | null = null;
+let mouseX = 0;
+let mouseY = 0;
+let elementsUnderPointer: HTMLElement[] = [];
+let currentElementIndex = 0;
 
 function handleClick(e: MouseEvent) {
     if (!selectionAllowed) return;
-    const target = e.target as HTMLElement;
-    if (target instanceof HTMLElement && lastHovered === target) {
-        console.log('Clicked element:', target);
-        setSelectedElements(target.outerHTML);
+    if (lastHovered instanceof HTMLElement) {
+        console.log('Clicked element:', lastHovered);
+        setSelectedElements(lastHovered.outerHTML);
         if (sendSelectionCallback) {
-            sendSelectionCallback(target);
+            sendSelectionCallback(lastHovered);
             sendSelectionCallback = null;
         }
         lastHovered.style.outline = '';
@@ -39,6 +42,9 @@ function handleMouseOver(e: MouseEvent) {
         target.style.backgroundColor = 'rgba(255, 255, 0, 0.5)';
         lastHovered = target;
     }
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    updateElementsUnderPointer();
 }
 
 function handleMouseOut(e: MouseEvent) {
@@ -75,6 +81,8 @@ function addListeners() {
     document.body.addEventListener('mouseout', handleMouseOut, true);
     document.body.addEventListener('click', handleClick, true);
     document.addEventListener('keydown', handleEscapeKey, true);
+    document.addEventListener('keydown', handleSpacebarCycle, true);
+    document.body.addEventListener('mousemove', handleMouseMove, true);
 }
 
 function removeListeners() {
@@ -82,6 +90,49 @@ function removeListeners() {
     document.body.removeEventListener('mouseout', handleMouseOut, true);
     document.body.removeEventListener('click', handleClick, true);
     document.removeEventListener('keydown', handleEscapeKey, true);
+    document.removeEventListener('keydown', handleSpacebarCycle, true);
+    document.body.removeEventListener('mousemove', handleMouseMove, true);
+}
+
+function handleMouseMove(e: MouseEvent) {
+    if (!selectionAllowed) return;
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    updateElementsUnderPointer();
+}
+
+function updateElementsUnderPointer() {
+    const elements = document.elementsFromPoint(mouseX, mouseY).filter(el => el instanceof HTMLElement) as HTMLElement[];
+    elementsUnderPointer = elements;
+    currentElementIndex = 0;
+    highlightCurrentElement();
+}
+
+function highlightCurrentElement() {
+    if (lastHovered) {
+        lastHovered.style.outline = '';
+        lastHovered.style.backgroundColor = '';
+    }
+    if (elementsUnderPointer.length > 0) {
+        const el = elementsUnderPointer[currentElementIndex];
+        el.style.outline = '2px solid #ff0000';
+        el.style.backgroundColor = 'rgba(255, 255, 0, 0.5)';
+        lastHovered = el;
+    } else {
+        lastHovered = null;
+    }
+}
+
+function handleSpacebarCycle(e: KeyboardEvent) {
+    if (!selectionAllowed) return;
+    if (e.key === ' ' || e.code === 'Space') {
+        if (elementsUnderPointer.length > 1) {
+            currentElementIndex = (currentElementIndex + 1) % elementsUnderPointer.length;
+            highlightCurrentElement();
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }
 }
 
 async function setSelectedElements(element) {

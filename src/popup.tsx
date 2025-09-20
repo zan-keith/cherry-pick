@@ -173,6 +173,7 @@ function IndexPopup() {
         )
       }
     })
+      window.close();
   }, [])
 function removeSelectedElement(index) {
     const updatedElements = [...(liveSelectionStorageData || [])]
