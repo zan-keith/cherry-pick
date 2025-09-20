@@ -53,16 +53,35 @@ function handleMouseOut(e: MouseEvent) {
     }
 }
 
+function handleEscapeKey(e: KeyboardEvent) {
+    if (!selectionAllowed) return;
+    if (e.key === "Escape") {
+        // Clear highlight
+        if (lastHovered) {
+            lastHovered.style.outline = '';
+            lastHovered.style.backgroundColor = '';
+            lastHovered = null;
+        }
+        selectionAllowed = false;
+        sendSelectionCallback = null;
+        removeListeners();
+        e.stopPropagation();
+        e.preventDefault();
+    }
+}
+
 function addListeners() {
     document.body.addEventListener('mouseover', handleMouseOver, true);
     document.body.addEventListener('mouseout', handleMouseOut, true);
     document.body.addEventListener('click', handleClick, true);
+    document.addEventListener('keydown', handleEscapeKey, true);
 }
 
 function removeListeners() {
     document.body.removeEventListener('mouseover', handleMouseOver, true);
     document.body.removeEventListener('mouseout', handleMouseOut, true);
     document.body.removeEventListener('click', handleClick, true);
+    document.removeEventListener('keydown', handleEscapeKey, true);
 }
 
 async function setSelectedElements(element) {
@@ -114,4 +133,21 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 
     return false;
+
+    function handleEscapeKey(e: KeyboardEvent) {
+        if (!selectionAllowed) return;
+        if (e.key === "Escape") {
+            // Clear highlight
+            if (lastHovered) {
+                lastHovered.style.outline = '';
+                lastHovered.style.backgroundColor = '';
+                lastHovered = null;
+            }
+            selectionAllowed = false;
+            sendSelectionCallback = null;
+            removeListeners();
+            e.stopPropagation();
+            e.preventDefault();
+        }
+    }
 });
