@@ -16,6 +16,9 @@
 ### How It Works
 1. **Activate the Extension:** Click the Cherry-Pick icon in your browser.
 2. **Select Elements:** Use the mouse to highlight and select elements you want to scrape.
+   - Often different elements might come in the way when selecting. You can use the `spacebar` key to cycle between the selectable elements.
+   - Try to pinpoint the exact element you need to scrape and click!
+   - Select atleast two similar elements for best results..
 3. **Scrape Elements:** Click the "Scrape Elements" button in the popup. The extension will:
    - Find common identifiers.
    - Generate a JS selector snippet.
