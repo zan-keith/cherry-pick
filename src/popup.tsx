@@ -226,7 +226,7 @@ function removeSelectedElement(index) {
 <div className=" flex justify-between w-full gap-2">
 
       <button onClick={handleClick} className="bg-yellow-400 text-black px-4  rounded-lg w-full h-10 font-semibold" >
-        HandPick Elements
+        Pick Elements
       </button>
       <button className="cursor-pointer">
         {selectElementView
@@ -352,7 +352,7 @@ function removeSelectedElement(index) {
       <button onClick={() => copyToClipboard(generateJS())} className="text-gray-500 cursor-pointer border p-1 rounded bg-gray-100 hover:bg-gray-200 flex gap-1 items-center">
 
     <CodeXml  size={24} className=""/>
-    JS 
+    JS Snippet
   </button>
     {/* <CodeXml  size={32} className="text-gray-500 cursor-pointer border p-1 rounded bg-gray-100 hover:bg-gray-200"/> */}
 </div>
