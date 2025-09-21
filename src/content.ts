@@ -11,11 +11,24 @@ let mouseY = 0;
 let elementsUnderPointer: HTMLElement[] = [];
 let currentElementIndex = 0;
 
+function safeElementSerializer(element: HTMLElement): string {
+    // Create a safe serialization without using innerHTML
+    const clone = element.cloneNode(true) as HTMLElement;
+    // Remove any potentially dangerous attributes
+    clone.removeAttribute('onclick');
+    clone.removeAttribute('onload');
+    clone.removeAttribute('onerror');
+    // Remove script tags
+    const scripts = clone.querySelectorAll('script');
+    scripts.forEach(script => script.remove());
+    return clone.outerHTML;
+}
+
 function handleClick(e: MouseEvent) {
     if (!selectionAllowed) return;
     if (lastHovered instanceof HTMLElement) {
         console.log('Clicked element:', lastHovered);
-        setSelectedElements(lastHovered.outerHTML);
+        setSelectedElements(safeElementSerializer(lastHovered));
         if (sendSelectionCallback) {
             sendSelectionCallback(lastHovered);
             sendSelectionCallback = null;
@@ -148,7 +161,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message.type === "ALLOW_SELECTION") {
         selectionAllowed = true;
         sendSelectionCallback = (element: HTMLElement) => {
-            sendResponse({ status: "selected", elementHTML: element.outerHTML });
+            sendResponse({ status: "selected", elementHTML: safeElementSerializer(element) });
         };
         addListeners();
         return true; // Keep sendResponse alive for async
@@ -168,7 +181,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         console.log("Selecting elements with selector:", message.selector);
         const selector = message.selector;
         const elements = document.querySelectorAll(selector);
-        const elementsArray = Array.from(elements).map(el => el.outerHTML);
+        const elementsArray = Array.from(elements).map(el => 
+            el instanceof HTMLElement ? safeElementSerializer(el) : el.outerHTML
+        );
         console.log(`Elements matching selector "${selector}":`, elementsArray);
 
         // Highlight the selected elements

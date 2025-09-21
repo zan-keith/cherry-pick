@@ -31,10 +31,23 @@
     "typescript": "5.3.3"
   },
   "manifest": {
+    "manifest_version": 3,
     "version": "1.2.0",
     "key": "$CRX_KEY",
     "host_permissions": [
       "https://*/*"
-    ]
+    ],
+    "browser_specific_settings": {
+      "gecko": {
+        "id": "cherry-pick@zan-keith.com",
+        "data_collection_permissions": {
+          "required": [
+            "websiteContent"
+          ],
+          "optional": []
+        }
+      }
+    }
+
   }
 }

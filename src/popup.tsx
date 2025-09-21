@@ -37,32 +37,149 @@ function IndexPopup() {
     const attributeCount = {}
 
     elements.forEach((htmlString) => {
-      const doc = new DOMParser().parseFromString(htmlString, "text/html")
-      const element = doc.body.firstChild as HTMLElement
-      if (!element) return
+      try {
+        console.log("Processing HTML string:", htmlString)
+        
+        // Use DOMParser which handles table elements better
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(htmlString, 'text/html')
+        
+        console.log("Parsed document body:", doc.body.innerHTML)
+        console.log("All elements in document:", Array.from(doc.querySelectorAll('*')).map(el => `${el.tagName}${el.className ? '.' + el.className : ''}${el.id ? '#' + el.id : ''}`))
+        
+        // Find the actual target element
+        let element: HTMLElement | null = null
+        
+        // Look for elements with our selection styles first
+        const elementsWithOutline = doc.querySelectorAll('[style*="outline"]')
+        console.log("Elements with outline:", elementsWithOutline.length, Array.from(elementsWithOutline).map(el => el.tagName))
+        
+        if (elementsWithOutline.length > 0) {
+          element = elementsWithOutline[0] as HTMLElement
+        } else {
+          // For table elements, they get wrapped in proper table structure
+          // Look for the specific tag type we're interested in
+          const allElements = doc.querySelectorAll('*')
+          console.log("All elements found:", Array.from(allElements).map(el => el.tagName))
+          
+          for (const el of allElements) {
+            // Skip structural HTML elements
+            if (!['HTML', 'HEAD', 'BODY', 'TABLE', 'TBODY', 'THEAD', 'TFOOT', 'TR', 'COLGROUP', 'COL'].includes(el.tagName)) {
+              element = el as HTMLElement
+              console.log("Selected element:", el.tagName, el.className, el.id)
+              break
+            }
+          }
+        }
+        
+        console.log("Found element:", element?.tagName, element?.className, element?.id)
+        
+        if (!element) {
+          console.warn("No element found for HTML string, trying manual parsing:", htmlString)
+          
+          // Fallback: manual parsing of the HTML string
+          const tagMatch = htmlString.match(/<(\w+)/)
+          if (tagMatch) {
+            const tagName = tagMatch[1].toLowerCase()
+            console.log("Manually extracted tag:", tagName)
+            tagCount[tagName] = (tagCount[tagName] || 0) + 1
+            
+            // Extract classes
+            const classMatch = htmlString.match(/class=["']([^"']*)["']/)
+            if (classMatch) {
+              const classes = classMatch[1].split(/\s+/).filter(cls => cls.length > 0)
+              classes.forEach(cls => {
+                classCount[cls] = (classCount[cls] || 0) + 1
+                console.log("Manually extracted class:", cls)
+              })
+            }
+            
+            // Extract ID
+            const idMatch = htmlString.match(/id=["']([^"']*)["']/)
+            if (idMatch) {
+              const id = idMatch[1]
+              idCount[id] = (idCount[id] || 0) + 1
+              console.log("Manually extracted ID:", id)
+            }
+            
+            // Extract other attributes (excluding our injected styles)
+            const attrRegex = /(\w+)=["']([^"']*)["']/g
+            let attrMatch
+            while ((attrMatch = attrRegex.exec(htmlString)) !== null) {
+              const [, name, value] = attrMatch
+              if (!name.startsWith('on') && 
+                  !['href', 'src'].includes(name)) {
+                if (name === 'style') {
+                  // Skip if it contains our selection styles
+                  if (!value.includes('outline: rgb(255, 0, 0)') && 
+                      !value.includes('background-color: rgba(255, 255, 0')) {
+                    const key = `${name}=${value}`
+                    attributeCount[key] = (attributeCount[key] || 0) + 1
+                    console.log("Manually extracted attribute:", key)
+                  }
+                } else {
+                  const key = `${name}=${value}`
+                  attributeCount[key] = (attributeCount[key] || 0) + 1
+                  console.log("Manually extracted attribute:", key)
+                }
+              }
+            }
+          }
+          return
+        }
 
-      // Tag name
-      const tagName = element.tagName.toLowerCase()
-      tagCount[tagName] = (tagCount[tagName] || 0) + 1
+        // Tag name
+        const tagName = element.tagName.toLowerCase()
+        tagCount[tagName] = (tagCount[tagName] || 0) + 1
+        console.log("Tag name:", tagName, "Count:", tagCount[tagName])
 
-      // Classes
-      element.classList.forEach((cls) => {
-        classCount[cls] = (classCount[cls] || 0) + 1
-      })
+        // Classes
+        element.classList.forEach((cls) => {
+          classCount[cls] = (classCount[cls] || 0) + 1
+          console.log("Class:", cls, "Count:", classCount[cls])
+        })
 
-      // IDs
-      if (element.id) {
-        idCount[element.id] = (idCount[element.id] || 0) + 1
+        // IDs
+        if (element.id) {
+          idCount[element.id] = (idCount[element.id] || 0) + 1
+          console.log("ID:", element.id, "Count:", idCount[element.id])
+        }
+
+        // Other attributes (excluding potentially dangerous ones and our injected styles)
+        Array.from(element.attributes).forEach(attr => {
+          // Skip event handlers, script-related attributes, and our added styles
+          if (!attr.name.startsWith('on') && 
+              !['href', 'src'].includes(attr.name)) {
+            // For style attribute, only include if it doesn't contain our selection styles
+            if (attr.name === 'style') {
+              const styleValue = attr.value
+              // Skip if it contains our selection outline or background color
+              if (!styleValue.includes('outline: rgb(255, 0, 0)') && 
+                  !styleValue.includes('background-color: rgba(255, 255, 0')) {
+                const key = `${attr.name}=${attr.value}`
+                attributeCount[key] = (attributeCount[key] || 0) + 1
+                console.log("Attribute:", key, "Count:", attributeCount[key])
+              }
+            } else {
+              const key = `${attr.name}=${attr.value}`
+              attributeCount[key] = (attributeCount[key] || 0) + 1
+              console.log("Attribute:", key, "Count:", attributeCount[key])
+            }
+          }
+        })
+      } catch (error) {
+        console.error("Error parsing HTML element:", htmlString, error)
+        return
       }
-
-      // Other attributes
-      Array.from(element.attributes).forEach(attr => {
-        const key = `${attr.name}=${attr.value}`
-        attributeCount[key] = (attributeCount[key] || 0) + 1
-      })
     })
 
     const total = elements.length
+    console.log("Total elements:", total)
+    console.log("Tag counts:", tagCount)
+    console.log("Class counts:", classCount)
+    console.log("ID counts:", idCount)
+    console.log("Attribute counts:", attributeCount)
+    
     const commonTags = Object.keys(tagCount).filter(tag => tagCount[tag] === total)
     const commonClasses = Object.keys(classCount).filter(cls => classCount[cls] === total)
     const commonIds = Object.keys(idCount).filter(id => idCount[id] === total)
@@ -76,8 +193,11 @@ function IndexPopup() {
       }
     })
 
-  setCommonIdentifiers({ tags: commonTags, classes: commonClasses, ids: commonIds, attributes: commonAttributes })
-  return { tags: commonTags, classes: commonClasses, ids: commonIds, attributes: commonAttributes }
+    const result = { tags: commonTags, classes: commonClasses, ids: commonIds, attributes: commonAttributes }
+    console.log("Final common identifiers:", result)
+    
+    setCommonIdentifiers(result)
+    return result
   }
 
   const clearSamples = useCallback(() => {
@@ -183,7 +303,7 @@ function removeSelectedElement(index) {
   }
   function innerText(htmlString) {
     const doc = new DOMParser().parseFromString(htmlString, "text/html")
-    return doc.body.innerText
+    return doc.body.textContent || ''
   }
 
 
@@ -358,7 +478,9 @@ function removeSelectedElement(index) {
     {/* <CodeXml  size={32} className="text-gray-500 cursor-pointer border p-1 rounded bg-gray-100 hover:bg-gray-200"/> */}
 </div>
 </div>
-
+<div className="w-full text-center mb-1 mt-2">
+  <a target="_blank" href="https://github.com/zan-keith/cherry-pick">Made with ❤️ by Zan Keith</a>
+</div>
     </div>
   )
 }

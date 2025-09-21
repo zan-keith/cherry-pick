@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "applications": {
+    "gecko": {
+      "id": "your-extension-id@example.com"
+    }
+  }
+}
