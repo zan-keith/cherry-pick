@@ -10,12 +10,16 @@
 - **One-Click Scraping:** Press the "Scrape" button to copy the data from all matched elements.
 ---
 ### Chrome Installation
-1. [Download the ZIP file from the Releases section](https://github.com/zan-keith/cherry-pick/releases). 
-2. Drag and drop the ZIP file onto the Chrome Extensions page (`chrome://extensions`) to install the extension.
+1. [Download the ZIP file from the Releases section](https://github.com/zan-keith/cherry-pick/releases).
+2. Goto `chrome://extensions/` and Enable "Developer Mode" on top right corner
+3. Drag and drop the ZIP file onto the Chrome Extensions page (`chrome://extensions`) to install the extension.
 
 ### How It Works
 1. **Activate the Extension:** Click the Cherry-Pick icon in your browser.
 2. **Select Elements:** Use the mouse to highlight and select elements you want to scrape.
+
+
+
    - Often different elements might come in the way when selecting. You can use the `spacebar` key to cycle between the selectable elements.
    - Try to pinpoint the exact element you need to scrape and click!
    - Select atleast two similar elements for best results..
@@ -26,6 +30,8 @@
 
 ##### Example Use Case
 Scrape all product names, prices, or links from a listing page by simply selecting a few examples.
+
+https://github.com/user-attachments/assets/bf8d60a5-946d-4b82-8749-fdba30ef4ef2
 
 ---
 ### Developer Installation
