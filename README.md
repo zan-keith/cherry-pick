@@ -14,6 +14,9 @@
 2. Goto `chrome://extensions/` and Enable "Developer Mode" on top right corner
 3. Drag and drop the ZIP file onto the Chrome Extensions page (`chrome://extensions`) to install the extension.
 
+### Firefox Installation
+1. [Install Directly From Firefox Addons](https://addons.mozilla.org/en-US/firefox/addon/cherry-pick/)
+
 ### How It Works
 1. **Activate the Extension:** Click the Cherry-Pick icon in your browser.
 2. **Select Elements:** Use the mouse to highlight and select elements you want to scrape.
